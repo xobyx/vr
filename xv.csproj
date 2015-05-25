@@ -94,13 +94,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>System.Linq.dll</HintPath>
     </Reference>
-    <Reference Include="A">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>A.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="MHand.cs" />
+    <Compile Include="Nm.cs" />
     <Compile Include="Spy.cs" />
     <Compile Include="OK.cs" />
     <Compile Include="Start.cs" />
